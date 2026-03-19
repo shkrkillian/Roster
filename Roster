@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cercle">
+<title>Cercle</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f0e8;--bg2:#ece7dc;--bg3:#e2dcd0;
+  --text:#2a2a2a;--text2:#555;--text3:#999;
+  --gold:#b8965a;--gold2:#d4b07a;
+  --border:#d8d0c4;--border2:#c8bfb0;
+  --white:#fff;--shadow:rgba(0,0,0,0.06);
+  --radius:16px;--radius-sm:10px;
+  --nav-h:72px;--safe-bottom:env(safe-area-inset-bottom,0px);
+}
+.dark{
+  --bg:#141210;--bg2:#1c1a17;--bg3:#242018;
+  --text:#f0ebe0;--text2:#b0a898;--text3:#666;
+  --border:#2e2a24;--border2:#3a342c;
+  --white:#1c1a17;--shadow:rgba(0,0,0,0.3);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300}
+#app{height:100%;display:flex;flex-direction:column;overflow:hidden}
+
+/* SCREENS */
+.screen{display:none;flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(–nav-h) + var(–safe-bottom) + 16px)}
+.screen.active{display:block}
+
+/* NAV */
+nav{position:fixed;bottom:0;left:0;right:0;height:calc(var(–nav-h) + var(–safe-bottom));background:var(–bg);border-top:1px solid var(–border);display:flex;align-items:flex-start;padding-top:8px;z-index:100;backdrop-filter:blur(20px)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:4px;cursor:pointer;opacity:.45;transition:opacity .2s}
+.nav-item.active{opacity:1}
+.nav-item svg{width:22px;height:22px;stroke:var(–text);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.nav-item.active svg{stroke:var(–gold)}
+.nav-item span{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(–text2)}
+.nav-item.active span{color:var(–gold)}
+
+/* HEADER */
+.page-header{padding:60px 24px 20px;display:flex;justify-content:space-between;align-items:flex-end}
+.page-title{font-family:‘Cormorant Garamond’,serif;font-size:2.2rem;font-weight:300;letter-spacing:.02em;line-height:1}
+.page-subtitle{font-size:11px;color:var(–text3);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+
+/* CARDS */
+.card{background:var(–white);border:1px solid var(–border);border-radius:var(–radius);padding:20px;margin:0 16px 12px;box-shadow:0 2px 12px var(–shadow);transition:transform .15s}
+.card:active{transform:scale(.98)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:50px;font-family:‘Jost’,sans-serif;font-size:13px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s}
+.btn-gold{background:var(–gold);color:#fff}
+.btn-gold:active{background:var(–gold2)}
+.btn-outline{background:transparent;color:var(–text);border:1px solid var(–border2)}
+.btn-ghost{background:transparent;color:var(–text2);border:none;padding:10px 16px}
+.btn-full{width:100%}
+.btn-fab{position:fixed;bottom:calc(var(–nav-h) + var(–safe-bottom) + 20px);right:20px;width:56px;height:56px;border-radius:50%;background:var(–gold);color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(184,150,90,.4);display:flex;align-items:center;justify-content:center;z-index:99;transition:transform .15s}
+.btn-fab:active{transform:scale(.92)}
+
+/* FORM */
+.form-group{margin-bottom:16px}
+.form-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(–text3);margin-bottom:6px;display:block}
+.form-input{width:100%;padding:14px 16px;background:var(–bg2);border:1px solid var(–border);border-radius:var(–radius-sm);font-family:‘Jost’,sans-serif;font-size:15px;font-weight:300;color:var(–text);outline:none;transition:border-color .2s;-webkit-appearance:none}
+.form-input:focus{border-color:var(–gold)}
+.form-input::placeholder{color:var(–text3)}
+textarea.form-input{resize:none;min-height:80px}
+.form-section{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(–gold);margin:24px 0 12px;font-weight:500}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tag{padding:6px 14px;border-radius:50px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(–border2);color:var(–text2);cursor:pointer;transition:all .2s}
+.tag.selected{background:var(–gold);border-color:var(–gold);color:#fff}
+
+/* STATUS BADGE */
+.status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:50px;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.status::before{content:’’;width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.6}
+.s-nouveau{background:#e8f0f8;color:#3a6ea5}
+.s-contacter{background:#f8f0e0;color:#a07030}
+.s-contacte{background:#e8f5e8;color:#3a8050}
+.s-relance{background:#fdf0e0;color:#c07020}
+.s-interesse{background:#f0e8f8;color:#7040a0}
+.s-discussion{background:#e0f0f8;color:#2070a0}
+.s-collab{background:#e8f8e8;color:#208050}
+.s-termine{background:#f0f0f0;color:#666}
+.s-dormant{background:#f8f0f0;color:#a05050}
+.dark .s-nouveau{background:#1a2535;color:#6090c0}
+.dark .s-contacte{background:#152515;color:#60b070}
+.dark .s-collab{background:#152515;color:#50a060}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(–bg);border-radius:24px 24px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:0 0 calc(var(–safe-bottom) + 20px);animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:40px;height:4px;background:var(–border2);border-radius:2px;margin:12px auto 0}
+.modal-header{padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(–border)}
+.modal-title{font-family:‘Cormorant Garamond’,serif;font-size:1.6rem;font-weight:300}
+.modal-body{padding:20px 24px}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(–bg2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(–text2)}
+
+/* CONTACT CARD */
+.contact-card{display:flex;align-items:center;gap:16px;background:var(–white);border:1px solid var(–border);border-radius:var(–radius);padding:16px 20px;margin:0 16px 10px;cursor:pointer;transition:transform .15s;box-shadow:0 1px 8px var(–shadow)}
+.contact-card:active{transform:scale(.97)}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(–gold),var(–gold2));display:flex;align-items:center;justify-content:center;font-family:‘Cormorant Garamond’,serif;font-size:1.2rem;color:#fff;flex-shrink:0;font-weight:600}
+.contact-info{flex:1;min-width:0}
+.contact-name{font-weight:400;font-size:15px;margin-bottom:2px}
+.contact-role{font-size:12px;color:var(–text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* KANBAN */
+.kanban{display:flex;gap:12px;padding:0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+.kanban-col{flex-shrink:0;width:200px}
+.kanban-col-header{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(–text3);margin-bottom:10px;padding:0 4px}
+.kanban-card{background:var(–white);border:1px solid var(–border);border-radius:var(–radius-sm);padding:14px;margin-bottom:8px;box-shadow:0 1px 6px var(–shadow);cursor:pointer}
+.kanban-card-name{font-size:13px;font-weight:400;margin-bottom:4px}
+.kanban-card-role{font-size:11px;color:var(–text3)}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:’’;position:absolute;left:6px;top:0;bottom:0;width:1px;background:var(–border)}
+.timeline-item{position:relative;margin-bottom:20px}
+.timeline-dot{position:absolute;left:-28px;top:4px;width:13px;height:13px;border-radius:50%;background:var(–gold);border:2px solid var(–bg)}
+.timeline-date{font-size:10px;color:var(–text3);letter-spacing:.06em;margin-bottom:4px}
+.timeline-text{font-size:13px;color:var(–text2)}
+
+/* SEARCH */
+.search-bar{margin:0 16px 16px;position:relative}
+.search-input{width:100%;padding:12px 16px 12px 44px;background:var(–white);border:1px solid var(–border);border-radius:50px;font-family:‘Jost’,sans-serif;font-size:14px;font-weight:300;color:var(–text);outline:none;-webkit-appearance:none}
+.search-input:focus{border-color:var(–gold)}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(–text3)}
+
+/* STAT CARDS */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px;margin-bottom:16px}
+.stat-card{background:var(–white);border:1px solid var(–border);border-radius:var(–radius);padding:20px;box-shadow:0 1px 8px var(–shadow)}
+.stat-number{font-family:‘Cormorant Garamond’,serif;font-size:2.4rem;font-weight:300;color:var(–gold);line-height:1}
+.stat-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(–text3);margin-top:4px}
+
+/* SECTION HEADER */
+.section-header{display:flex;justify-content:space-between;align-items:center;padding:0 16px;margin-bottom:12px}
+.section-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(–text3)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 32px;color:var(–text3)}
+.empty-icon{font-size:3rem;margin-bottom:16px;opacity:.3}
+.empty-text{font-size:14px;line-height:1.6}
+
+/* DETAIL VIEW */
+.detail-header{background:linear-gradient(135deg,var(–gold),var(–gold2));padding:80px 24px 32px;color:#fff;position:relative}
+.detail-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:‘Cormorant Garamond’,serif;font-size:2rem;color:#fff;margin-bottom:16px;border:2px solid rgba(255,255,255,.3)}
+.detail-name{font-family:‘Cormorant Garamond’,serif;font-size:2rem;font-weight:300;margin-bottom:4px}
+.detail-role{font-size:13px;opacity:.8}
+.back-btn{position:absolute;top:52px;left:16px;width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.detail-actions{display:flex;gap:10px;padding:16px;overflow-x:auto}
+.action-btn{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 16px;background:var(–white);border:1px solid var(–border);border-radius:var(–radius-sm);cursor:pointer;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(–text2)}
+.action-btn svg{width:20px;height:20px;stroke:var(–gold);fill:none;stroke-width:1.5}
+.info-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(–border)}
+.info-row:last-child{border-bottom:none}
+.info-icon{width:32px;height:32px;border-radius:8px;background:var(–bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.info-icon svg{width:16px;height:16px;stroke:var(–gold);fill:none;stroke-width:1.5}
+.info-value{font-size:14px;color:var(–text)}
+.info-hint{font-size:11px;color:var(–text3)}
+
+/* SELECT */
+select.form-input{background-image:url(“data:image/svg+xml,%3Csvg xmlns=‘http://www.w3.org/2000/svg’ width=‘12’ height=‘12’ viewBox=‘0 0 12 12’%3E%3Cpath fill=’%23999’ d=‘M6 8L1 3h10z’/%3E%3C/svg%3E”);background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+
+/* COLLAB CARD */
+.collab-card{background:var(–white);border:1px solid var(–border);border-radius:var(–radius);padding:18px 20px;margin:0 16px 10px;box-shadow:0 1px 8px var(–shadow)}
+.collab-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.collab-name{font-weight:400;font-size:15px}
+.collab-contact{font-size:12px;color:var(–text3);margin-top:2px}
+.collab-progress{height:3px;background:var(–bg2);border-radius:2px;margin-top:12px}
+.collab-bar{height:100%;background:var(–gold);border-radius:2px;transition:width .4s}
+.paid-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:50px}
+.paid{background:#e8f8e8;color:#208050}
+.unpaid{background:#f8e8e8;color:#a03030}
+
+/* REMINDERS */
+.reminder-item{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(–border)}
+.reminder-dot{width:10px;height:10px;border-radius:50%;background:var(–gold);flex-shrink:0}
+.reminder-overdue .reminder-dot{background:#c05050}
+.reminder-info{flex:1}
+.reminder-name{font-size:14px;font-weight:400}
+.reminder-date{font-size:11px;color:var(–text3)}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <!-- SCREENS -->
+  <div class="screen active" id="screen-home">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Cercle</div>
+        <div class="page-subtitle">Tableau de bord</div>
+      </div>
+      <button class="btn btn-ghost" onclick="toggleDark()" style="font-size:20px;padding:8px">☽</button>
+    </div>
+
+```
+<div class="stats" id="stats-grid"></div>
+
+<div class="section-header"><span class="section-title">Relances du jour</span></div>
+<div id="reminders-list"></div>
+
+<div class="section-header" style="margin-top:8px"><span class="section-title">Collaborations en cours</span></div>
+<div id="collabs-active"></div>
+
+<div class="section-header" style="margin-top:8px"><span class="section-title">Derniers contacts</span></div>
+<div id="recent-contacts"></div>
+
+<button class="btn-fab" onclick="openAddContact()">+</button>
+```
+
+  </div>
+
+  <div class="screen" id="screen-contacts">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Contacts</div>
+        <div class="page-subtitle" id="contacts-count">0 personnes</div>
+      </div>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </span>
+      <input class="search-input" id="search-input" placeholder="Rechercher..." oninput="renderContacts()">
+    </div>
+    <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:16px;overflow-x:auto">
+      <button class="tag selected" id="filter-all" onclick="setFilter('all')">Tous</button>
+      <button class="tag" id="filter-PR" onclick="setFilter('PR')">PR</button>
+      <button class="tag" id="filter-presse" onclick="setFilter('presse')">Presse</button>
+      <button class="tag" id="filter-sport" onclick="setFilter('sport')">Sport</button>
+      <button class="tag" id="filter-art" onclick="setFilter('art')">Art</button>
+      <button class="tag" id="filter-luxe" onclick="setFilter('luxe')">Luxe</button>
+      <button class="tag" id="filter-underground" onclick="setFilter('underground')">Underground</button>
+    </div>
+    <div id="contacts-list"></div>
+    <button class="btn-fab" onclick="openAddContact()">+</button>
+  </div>
+
+  <div class="screen" id="screen-suivi">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Suivi</div>
+        <div class="page-subtitle">Pipeline & Collaborations</div>
+      </div>
+    </div>
+    <div class="section-header"><span class="section-title">Vue Kanban</span></div>
+    <div class="kanban" id="kanban-board"></div>
+    <div class="section-header" style="margin-top:20px;padding:0 16px"><span class="section-title">Collaborations</span>
+      <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="openAddCollab()">+ Ajouter</button>
+    </div>
+    <div id="collabs-list"></div>
+  </div>
+
+  <div class="screen" id="screen-params">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Paramètres</div>
+      </div>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="info-row" onclick="toggleDark()" style="cursor:pointer">
+        <div class="info-icon"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+        <div><div class="info-value">Mode sombre</div><div class="info-hint">Changer le thème</div></div>
+      </div>
+      <div class="info-row" onclick="exportCSV()" style="cursor:pointer">
+        <div class="info-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        <div><div class="info-value">Exporter les contacts</div><div class="info-hint">Télécharger en CSV</div></div>
+      </div>
+      <div class="info-row" onclick="if(confirm('Supprimer toutes les données ?')){localStorage.clear();location.reload()}" style="cursor:pointer">
+        <div class="info-icon"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></div>
+        <div><div class="info-value">Réinitialiser</div><div class="info-hint" style="color:#c05050">Supprimer toutes les données</div></div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:32px;color:var(--text3);font-size:11px;letter-spacing:.06em">CERCLE — v1.0<br>Données stockées localement</div>
+  </div>
+
+  <!-- CONTACT DETAIL -->
+
+  <div class="screen" id="screen-detail">
+    <div class="detail-header" id="detail-header">
+      <button class="back-btn" onclick="showScreen('contacts')">←</button>
+      <div class="detail-avatar" id="detail-avatar"></div>
+      <div class="detail-name" id="detail-name"></div>
+      <div class="detail-role" id="detail-role"></div>
+    </div>
+    <div class="detail-actions" id="detail-actions"></div>
+    <div class="card" style="padding:0" id="detail-info"></div>
+    <div style="padding:0 16px;margin-top:16px">
+      <div class="section-header" style="padding:0"><span class="section-title">Statut</span></div>
+      <div style="padding:12px 0" id="detail-status-row"></div>
+      <div class="section-header" style="padding:0;margin-top:12px"><span class="section-title">Timeline</span>
+        <button class="btn btn-ghost" style="font-size:11px;padding:6px 12px" onclick="openAddInteraction()">+ Ajouter</button>
+      </div>
+      <div class="timeline" id="detail-timeline" style="margin-top:16px"></div>
+      <div class="section-header" style="padding:0;margin-top:20px"><span class="section-title">Notes</span></div>
+      <div id="detail-notes" style="padding:12px 0;font-size:14px;color:var(--text2);line-height:1.6"></div>
+      <div style="display:flex;gap:10px;margin-top:20px;margin-bottom:32px">
+        <button class="btn btn-outline" style="flex:1" onclick="editCurrentContact()">Modifier</button>
+        <button class="btn btn-outline" style="flex:1;color:#c05050;border-color:#c05050" onclick="deleteCurrentContact()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+
+  <nav>
+    <div class="nav-item active" onclick="showScreen('home')" id="nav-home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Accueil</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('contacts')" id="nav-contacts">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Contacts</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('suivi')" id="nav-suivi">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Suivi</span>
+    </div>
+    <div class="nav-item" onclick="showScreen('params')" id="nav-params">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Paramètres</span>
+    </div>
+  </nav>
+</div>
+
+<!-- MODALS -->
+
+<div class="modal-overlay" id="modal-contact">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-contact-title">Nouveau contact</div>
+      <button class="modal-close" onclick="closeModal('modal-contact')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-contact-id">
+      <div class="form-section">Identité</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="f-prenom" placeholder="Marie"></div>
+        <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="f-nom" placeholder="Dupont"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Profession / Rôle</label><input class="form-input" id="f-role" placeholder="Directrice PR"></div>
+      <div class="form-group"><label class="form-label">Organisation</label><input class="form-input" id="f-org" placeholder="Maison X"></div>
+      <div class="form-section">Coordonnées</div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="f-email" type="email" placeholder="marie@exemple.com"></div>
+      <div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="f-tel" type="tel" placeholder="+33 6 00 00 00 00"></div>
+      <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" id="f-insta" placeholder="@marie"></div>
+      <div class="form-group"><label class="form-label">LinkedIn</label><input class="form-input" id="f-linkedin" placeholder="linkedin.com/in/marie"></div>
+      <div class="form-group"><label class="form-label">Ville</label><input class="form-input" id="f-ville" placeholder="Paris"></div>
+      <div class="form-section">Contexte</div>
+      <div class="form-group"><label class="form-label">Date de rencontre</label><input class="form-input" id="f-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Statut</label>
+        <select class="form-input" id="f-statut">
+          <option value="nouveau">Nouveau</option>
+          <option value="contacter">À contacter</option>
+          <option value="contacte">Contacté</option>
+          <option value="relance">Relance à faire</option>
+          <option value="interesse">Intéressé</option>
+          <option value="discussion">En discussion</option>
+          <option value="collab">Collab en cours</option>
+          <option value="termine">Terminé</option>
+          <option value="dormant">Dormant</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Tags</label>
+        <div class="tags">
+          <span class="tag" onclick="toggleTag(this,'PR')">PR</span>
+          <span class="tag" onclick="toggleTag(this,'presse')">Presse</span>
+          <span class="tag" onclick="toggleTag(this,'sport')">Sport</span>
+          <span class="tag" onclick="toggleTag(this,'art')">Art</span>
+          <span class="tag" onclick="toggleTag(this,'luxe')">Luxe</span>
+          <span class="tag" onclick="toggleTag(this,'underground')">Underground</span>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="f-notes" placeholder="Rencontré lors de..."></textarea></div>
+      <button class="btn btn-gold btn-full" onclick="saveContact()" style="margin-top:8px">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-interaction">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Ajouter interaction</div>
+      <button class="modal-close" onclick="closeModal('modal-interaction')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Type d'interaction</label>
+        <select class="form-input" id="i-type">
+          <option>DM envoyé</option>
+          <option>Mail envoyé</option>
+          <option>Appel</option>
+          <option>Meeting</option>
+          <option>Media kit envoyé</option>
+          <option>Proposition envoyée</option>
+          <option>Relance</option>
+          <option>Deal accepté</option>
+          <option>Contenu livré</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Note (optionnel)</label><textarea class="form-input" id="i-note" placeholder="Détails..."></textarea></div>
+      <button class="btn btn-gold btn-full" onclick="saveInteraction()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-collab">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Nouvelle collaboration</div>
+      <button class="modal-close" onclick="closeModal('modal-collab')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Nom du projet</label><input class="form-input" id="c-nom" placeholder="Campagne printemps"></div>
+      <div class="form-group"><label class="form-label">Contact lié</label>
+        <select class="form-input" id="c-contact"></select>
+      </div>
+      <div class="form-group"><label class="form-label">Plateformes</label><input class="form-input" id="c-plateformes" placeholder="Instagram, TikTok"></div>
+      <div class="form-group"><label class="form-label">Livrables</label><input class="form-input" id="c-livrables" placeholder="2 reels + 3 stories"></div>
+      <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" id="c-deadline" type="date"></div>
+      <div class="form-group"><label class="form-label">Rémunération</label><input class="form-input" id="c-remun" placeholder="500€ ou produit offert"></div>
+      <div class="form-group"><label class="form-label">Statut</label>
+        <select class="form-input" id="c-statut">
+          <option>Brief</option>
+          <option>Script</option>
+          <option>Tournage</option>
+          <option>Montage</option>
+          <option>Validation</option>
+          <option>Posté</option>
+          <option>Payé</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Paiement</label>
+        <select class="form-input" id="c-paiement">
+          <option value="non">Non payé</option>
+          <option value="oui">Payé</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input" id="c-notes" placeholder="Détails du projet..."></textarea></div>
+      <button class="btn btn-gold btn-full" onclick="saveCollab()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-relance">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Programmer une relance</div>
+      <button class="modal-close" onclick="closeModal('modal-relance')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <button class="btn btn-outline" onclick="setRelance(3)">3 jours</button>
+        <button class="btn btn-outline" onclick="setRelance(7)">7 jours</button>
+        <button class="btn btn-outline" onclick="setRelance(14)">14 jours</button>
+        <button class="btn btn-outline" onclick="setRelance(30)">30 jours</button>
+      </div>
+      <div class="form-group"><label class="form-label">Ou choisir une date</label><input class="form-input" id="relance-date" type="date"></div>
+      <button class="btn btn-gold btn-full" onclick="saveRelance()">Programmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// DATA
+let contacts = JSON.parse(localStorage.getItem('cercle_contacts') || '[]');
+let collabs = JSON.parse(localStorage.getItem('cercle_collabs') || '[]');
+let currentContactId = null;
+let activeFilter = 'all';
+
+function save() {
+  localStorage.setItem('cercle_contacts', JSON.stringify(contacts));
+  localStorage.setItem('cercle_collabs', JSON.stringify(collabs));
+}
+
+// SCREENS
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  if (name === 'home') renderHome();
+  if (name === 'contacts') renderContacts();
+  if (name === 'suivi') renderSuivi();
+  window.scrollTo(0, 0);
+}
+
+// DARK MODE
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('cercle_dark', document.body.classList.contains('dark'));
+}
+
+// MODAL
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// STATUS
+const STATUS_MAP = {
+  nouveau: {label:'Nouveau', cls:'s-nouveau'},
+  contacter: {label:'À contacter', cls:'s-contacter'},
+  contacte: {label:'Contacté', cls:'s-contacte'},
+  relance: {label:'Relance à faire', cls:'s-relance'},
+  interesse: {label:'Intéressé', cls:'s-interesse'},
+  discussion: {label:'En discussion', cls:'s-discussion'},
+  collab: {label:'Collab en cours', cls:'s-collab'},
+  termine: {label:'Terminé', cls:'s-termine'},
+  dormant: {label:'Dormant', cls:'s-dormant'}
+};
+
+function statusBadge(s) {
+  const st = STATUS_MAP[s] || STATUS_MAP.nouveau;
+  return `<span class="status ${st.cls}">${st.label}</span>`;
+}
+
+// AVATAR
+function getAvatar(c) {
+  return ((c.prenom||'?')[0] + (c.nom||'')[0]).toUpperCase();
+}
+
+// HOME
+function renderHome() {
+  const today = new Date().toISOString().split('T')[0];
+  // Stats
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-number">${contacts.length}</div><div class="stat-label">Contacts</div></div>
+    <div class="stat-card"><div class="stat-number">${contacts.filter(c=>c.statut==='collab').length}</div><div class="stat-label">Collabs actives</div></div>
+    <div class="stat-card"><div class="stat-number">${contacts.filter(c=>c.relance && c.relance <= today).length}</div><div class="stat-label">Relances</div></div>
+    <div class="stat-card"><div class="stat-number">${collabs.filter(c=>c.paiement==='non').length}</div><div class="stat-label">Impayés</div></div>
+  `;
+  // Reminders
+  const due = contacts.filter(c => c.relance && c.relance <= today);
+  const rl = document.getElementById('reminders-list');
+  if (!due.length) { rl.innerHTML = '<div class="empty"><div class="empty-text">Aucune relance pour aujourd\'hui 🎉</div></div>'; }
+  else {
+    rl.innerHTML = '<div class="card" style="padding:0">' + due.map(c => `
+      <div class="reminder-item ${c.relance < today ? 'reminder-overdue' : ''}" onclick="openDetail('${c.id}')">
+        <div class="reminder-dot"></div>
+        <div class="reminder-info"><div class="reminder-name">${c.prenom} ${c.nom}</div><div class="reminder-date">${c.relance < today ? 'En retard — ' : ''}${c.relance}</div></div>
+      </div>`).join('') + '</div>';
+  }
+  // Collabs actives
+  const ac = collabs.filter(c => c.statut !== 'Payé');
+  const cl = document.getElementById('collabs-active');
+  if (!ac.length) cl.innerHTML = '';
+  else cl.innerHTML = ac.slice(0,3).map(c => collabCard(c)).join('');
+  // Recent contacts
+  const rc = [...contacts].sort((a,b) => new Date(b.created) - new Date(a.created)).slice(0,3);
+  document.getElementById('recent-contacts').innerHTML = rc.map(c => contactCard(c)).join('') || '<div class="empty"><div class="empty-text">Ajoutez votre premier contact</div></div>';
+}
+
+function contactCard(c) {
+  return `<div class="contact-card" onclick="openDetail('${c.id}')">
+    <div class="avatar">${getAvatar(c)}</div>
+    <div class="contact-info">
+      <div class="contact-name">${c.prenom} ${c.nom}</div>
+      <div class="contact-role">${c.role || ''}${c.org ? ' · ' + c.org : ''}</div>
+    </div>
+    ${statusBadge(c.statut)}
+  </div>`;
+}
+
+function collabCard(c) {
+  const progress = ['Brief','Script','Tournage','Montage','Validation','Posté','Payé'];
+  const pct = Math.round(((progress.indexOf(c.statut)+1)/progress.length)*100);
+  return `<div class="collab-card">
+    <div class="collab-header">
+      <div><div class="collab-name">${c.nom}</div><div class="collab-contact">${getContactName(c.contact)}</div></div>
+      <span class="paid-badge ${c.paiement==='oui'?'paid':'unpaid'}">${c.paiement==='oui'?'Payé':'Impayé'}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px">
+      <span>${c.statut}</span><span>${pct}%</span>
+    </div>
+    <div class="collab-progress"><div class="collab-bar" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function getContactName(id) {
+  const c = contacts.find(x => x.id === id);
+  return c ? c.prenom + ' ' + c.nom : '—';
+}
+
+// CONTACTS
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('[id^=filter-]').forEach(t => t.classList.remove('selected'));
+  document.getElementById('filter-' + f).classList.add('selected');
+  renderContacts();
+}
+
+function renderContacts() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let list = contacts.filter(c => {
+    const match = !q || (c.prenom+c.nom+c.role+c.org).toLowerCase().includes(q);
+    const tag = activeFilter === 'all' || (c.tags||[]).includes(activeFilter);
+    return match && tag;
+  });
+  document.getElementById('contacts-count').textContent = list.length + ' personne' + (list.length !== 1 ? 's' : '');
+  document.getElementById('contacts-list').innerHTML = list.length
+    ? list.map(c => contactCard(c)).join('')
+    : '<div class="empty"><div class="empty-icon">○</div><div class="empty-text">Aucun contact trouvé</div></div>';
+}
+
+// SUIVI
+function renderSuivi() {
+  const statuses = Object.keys(STATUS_MAP);
+  document.getElementById('kanban-board').innerHTML = statuses.map(s => {
+    const cards = contacts.filter(c => c.statut === s);
+    return `<div class="kanban-col">
+      <div class="kanban-col-header">${STATUS_MAP[s].label} <span style="opacity:.5">${cards.length}</span></div>
+      ${cards.map(c => `<div class="kanban-card" onclick="openDetail('${c.id}')">
+        <div class="kanban-card-name">${c.prenom} ${c.nom}</div>
+        <div class="kanban-card-role">${c.role||''}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+  document.getElementById('collabs-list').innerHTML = collabs.length
+    ? collabs.map(c => collabCard(c)).join('')
+    : '<div class="empty"><div class="empty-text">Aucune collaboration</div></div>';
+}
+
+// ADD CONTACT
+function openAddContact() {
+  document.getElementById('edit-contact-id').value = '';
+  document.getElementById('modal-contact-title').textContent = 'Nouveau contact';
+  ['prenom','nom','role','org','email','tel','insta','linkedin','ville','notes'].forEach(f => document.getElementById('f-'+f).value = '');
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('f-statut').value = 'nouveau';
+  document.querySelectorAll('#modal-contact .tag').forEach(t => t.classList.remove('selected'));
+  openModal('modal-contact');
+}
+
+function toggleTag(el, tag) { el.classList.toggle('selected'); }
+
+function saveContact() {
+  const id = document.getElementById('edit-contact-id').value || Date.now().toString();
+  const tags = [...document.querySelectorAll('#modal-contact .tag.selected')].map(t => t.textContent);
+  const data = {
+    id, prenom: document.getElementById('f-prenom').value.trim(),
+    nom: document.getElementById('f-nom').value.trim(),
+    role: document.getElementById('f-role').value.trim(),
+    org: document.getElementById('f-org').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    tel: document.getElementById('f-tel').value.trim(),
+    insta: document.getElementById('f-insta').value.trim(),
+    linkedin: document.getElementById('f-linkedin').value.trim(),
+    ville: document.getElementById('f-ville').value.trim(),
+    date: document.getElementById('f-date').value,
+    statut: document.getElementById('f-statut').value,
+    tags, notes: document.getElementById('f-notes').value.trim(),
+    created: new Date().toISOString(), interactions: [], relance: null
+  };
+  if (!data.prenom && !data.nom) { alert('Ajoutez au moins un nom'); return; }
+  const idx = contacts.findIndex(c => c.id === id);
+  if (idx >= 0) { data.created = contacts[idx].created; data.interactions = contacts[idx].interactions; data.relance = contacts[idx].relance; contacts[idx] = data; }
+  else contacts.unshift(data);
+  save(); closeModal('modal-contact'); renderContacts(); renderHome();
+}
+
+// DETAIL
+function openDetail(id) {
+  currentContactId = id;
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('detail-avatar').textContent = getAvatar(c);
+  document.getElementById('detail-name').textContent = c.prenom + ' ' + c.nom;
+  document.getElementById('detail-role').textContent = (c.role||'') + (c.org ? ' · ' + c.org : '');
+  // Actions
+  document.getElementById('detail-actions').innerHTML = `
+    ${c.email ? `<div class="action-btn" onclick="window.location='mailto:${c.email}'"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Mail</div>` : ''}
+    ${c.tel ? `<div class="action-btn" onclick="window.location='tel:${c.tel}'"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l.95-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Appel</div>` : ''}
+    ${c.insta ? `<div class="action-btn" onclick="window.open('https://instagram.com/${c.insta.replace('@','')}')"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>Insta</div>` : ''}
+    <div class="action-btn" onclick="openRelanceModal()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Relance</div>
+  `;
+  // Info
+  const infos = [
+    c.email && {icon:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>', val:c.email, hint:'Email'},
+    c.tel && {icon:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 13.19 19a19.5 19.5 0 0 1-6.31-6.31A19.79 19.79 0 0 1 .69 5.71 2 2 0 0 1 2.68 3h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l.95-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>', val:c.tel, hint:'Téléphone'},
+    c.ville && {icon:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>', val:c.ville, hint:'Ville'},
+    c.date && {icon:'<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', val:c.date, hint:'Rencontré le'},
+  ].filter(Boolean);
+  document.getElementById('detail-info').innerHTML = infos.map(i => `
+    <div class="info-row">
+      <div class="info-icon"><svg viewBox="0 0 24 24">${i.icon}</svg></div>
+      <div><div class="info-value">${i.val}</div><div class="info-hint">${i.hint}</div></div>
+    </div>`).join('');
+  // Status
+  document.getElementById('detail-status-row').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      ${statusBadge(c.statut)}
+      <select onchange="updateStatus(this.value)" style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--bg2);color:var(--text);font-family:'Jost',sans-serif;font-size:12px">
+        ${Object.entries(STATUS_MAP).map(([k,v]) => `<option value="${k}" ${c.statut===k?'selected':''}>${v.label}</option>`).join('')}
+      </select>
+      ${c.relance ? `<span style="font-size:11px;color:var(--gold)">Relance: ${c.relance}</span>` : ''}
+    </div>`;
+  // Tags
+  if (c.tags && c.tags.length) {
+    document.getElementById('detail-status-row').innerHTML += `<div class="tags" style="margin-top:10px">${c.tags.map(t=>`<span class="tag selected">${t}</span>`).join('')}</div>`;
+  }
+  // Timeline
+  const tl = document.getElementById('detail-timeline');
+  if (!c.interactions || !c.interactions.length) { tl.innerHTML = '<div style="color:var(--text3);font-size:13px">Aucune interaction enregistrée</div>'; }
+  else {
+    tl.innerHTML = [...c.interactions].reverse().map(i => `
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">${i.date}</div>
+        <div class="timeline-text">${i.type}${i.note ? ' — ' + i.note : ''}</div>
+      </div>`).join('');
+  }
+  // Notes
+  document.getElementById('detail-notes').textContent = c.notes || 'Aucune note';
+  showScreen('detail');
+}
+
+function updateStatus(val) {
+  const c = contacts.find(x => x.id === currentContactId);
+  if (c) { c.statut = val; save(); }
+}
+
+function editCurrentContact() {
+  const c = contacts.find(x => x.id === currentContactId);
+  if (!c) return;
+  document.getElementById('edit-contact-id').value = c.id;
+  document.getElementById('modal-contact-title').textContent = 'Modifier';
+  document.getElementById('f-prenom').value = c.prenom || '';
+  document.getElementById('f-nom').value = c.nom || '';
+  document.getElementById('f-role').value = c.role || '';
+  document.getElementById('f-org').value = c.org || '';
+  document.getElementById('f-email').value = c.email || '';
+  document.getElementById('f-tel').value = c.tel || '';
+  document.getElementById('f-insta').value = c.insta || '';
+  document.getElementById('f-linkedin').value = c.linkedin || '';
+  document.getElementById('f-ville').value = c.ville || '';
+  document.getElementById('f-date').value = c.date || '';
+  document.getElementById('f-statut').value = c.statut || 'nouveau';
+  document.getElementById('f-notes').value = c.notes || '';
+  document.querySelectorAll('#modal-contact .tag').forEach(t => {
+    t.classList.toggle('selected', (c.tags||[]).includes(t.textContent));
+  });
+  openModal('modal-contact');
+}
+
+function deleteCurrentContact() {
+  if (!confirm('Supprimer ce contact ?')) return;
+  contacts = contacts.filter(c => c.id !== currentContactId);
+  save(); showScreen('contacts');
+}
+
+// INTERACTION
+function openAddInteraction() { openModal('modal-interaction'); }
+
+function saveInteraction() {
+  const c = contacts.find(x => x.id === currentContactId);
+  if (!c) return;
+  if (!c.interactions) c.interactions = [];
+  c.interactions.push({
+    type: document.getElementById('i-type').value,
+    note: document.getElementById('i-note').value.trim(),
+    date: new Date().toLocaleDateString('fr-FR')
+  });
+  save(); closeModal('modal-interaction'); openDetail(currentContactId);
+}
+
+// RELANCE
+function openRelanceModal() { openModal('modal-relance'); }
+
+function setRelance(days) {
+  const d = new Date(); d.setDate(d.getDate() + days);
+  document.getElementById('relance-date').value = d.toISOString().split('T')[0];
+}
+
+function saveRelance() {
+  const c = contacts.find(x => x.id === currentContactId);
+  const date = document.getElementById('relance-date').value;
+  if (c && date) { c.relance = date; save(); closeModal('modal-relance'); openDetail(currentContactId); }
+}
+
+// COLLAB
+function openAddCollab() {
+  document.getElementById('c-contact').innerHTML = contacts.map(c => `<option value="${c.id}">${c.prenom} ${c.nom}</option>`).join('');
+  document.getElementById('c-deadline').value = '';
+  openModal('modal-collab');
+}
+
+function saveCollab() {
+  collabs.unshift({
+    id: Date.now().toString(),
+    nom: document.getElementById('c-nom').value.trim(),
+    contact: document.getElementById('c-contact').value,
+    plateformes: document.getElementById('c-plateformes').value.trim(),
+    livrables: document.getElementById('c-livrables').value.trim(),
+    deadline: document.getElementById('c-deadline').value,
+    remun: document.getElementById('c-remun').value.trim(),
+    statut: document.getElementById('c-statut').value,
+    paiement: document.getElementById('c-paiement').value,
+    notes: document.getElementById('c-notes').value.trim()
+  });
+  save(); closeModal('modal-collab'); renderSuivi();
+}
+
+// EXPORT CSV
+function exportCSV() {
+  const headers = ['Prénom','Nom','Email','Téléphone','Profession','Organisation','Instagram','LinkedIn','Ville','Statut','Date rencontre','Tags','Notes'];
+  const rows = contacts.map(c => [c.prenom,c.nom,c.email,c.tel,c.role,c.org,c.insta,c.linkedin,c.ville,c.statut,c.date,(c.tags||[]).join(';'),c.notes].map(v => '"'+(v||'')+'"').join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='cercle_contacts.csv'; a.click();
+}
+
+// INIT
+if (localStorage.getItem('cercle_dark') === 'true') document.body.classList.add('dark');
+document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+renderHome();
+</script>
+
+</body>
+</html>
